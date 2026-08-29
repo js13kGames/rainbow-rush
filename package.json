@@ -1,0 +1,30 @@
+{
+  "name": "rainbow-rush-js13k",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 3000",
+    "preview": "vite preview --host 127.0.0.1 --port 3000",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types scripts/geometry-test.mjs",
+    "build": "pnpm run typecheck && pnpm run test && vite build",
+    "zip": "pnpm run build && node scripts/package.mjs",
+    "size": "node scripts/size.mjs",
+    "check-size": "node scripts/size.mjs --check",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "oxlint": "^1.80.0",
+    "prettier": "^3.9.6",
+    "terser": "5.50.0",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  }
+}

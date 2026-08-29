@@ -1,0 +1,36 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "plugins": ["eslint", "typescript", "oxc"],
+  "env": {
+    "es2020": true
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts"],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": ["scripts/**/*.mjs", "vite.config.ts"],
+      "env": {
+        "node": true
+      }
+    },
+    {
+      "files": ["src/main.ts"],
+      "rules": {
+        "eslint/no-new": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist/**", "release/**", "coverage/**"],
+  "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error"
+  }
+}
