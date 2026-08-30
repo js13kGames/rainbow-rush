@@ -34,6 +34,8 @@ const internalPropertyPattern = new RegExp(
     "previousY",
     "projectile",
     "projectileImages",
+    "popupColor",
+    "popupText",
     "radius",
     "resume",
     "rideAgain",

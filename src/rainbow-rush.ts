@@ -26,8 +26,8 @@ import type {
 import { BOOMERANG, BULLET_ATTACK, DASH_ATTACK, LOOP, NO_ATTACK, NORMAL, weaknessMatches, ZIGZAG } from "./model.ts";
 import { clamp, colorAt, createImageAssets, drawSvg, loadBestScore, random, saveBestScore } from "./utils.ts";
 
-type MotionPoint = Point & { time: number };
-type ScorePopup = Point & { color: string; life: number; text: string };
+type MotionPoint = Point & { t: number };
+type ScorePopup = Point & { life: number; popupColor: string; popupText: string };
 
 export class RainbowRush {
   static readonly #WIDTH = 960;
@@ -37,7 +37,7 @@ export class RainbowRush {
   static readonly #ROUTE_POINT_SPACING = RainbowRush.#DRAW_WIDTH * 1.1;
   static readonly #MAX_ROUTE_LENGTH = 4_096;
   static readonly #BRAKE_DURATION = 0.3;
-  static readonly #HIGH_SCORE_KEY = "rainbowRush2026.highScore";
+  static readonly #HIGH_SCORE_KEY = "rnike.js13kgames2026.highScore";
   static readonly #TUTORIAL_SKIP = { x: 24, y: 466, width: 128, height: 50 } as const;
   static readonly #PAUSE_BUTTON = { x: 868, y: 16, width: 68, height: 60 } as const;
   static readonly #MUTE_BUTTON = { x: 892, y: 476, width: 52, height: 48 } as const;
@@ -116,6 +116,12 @@ export class RainbowRush {
 
   #weaknessColor(weakness: Weakness): string {
     return colorAt(RainbowRush.#gestureColors, weakness);
+  }
+
+  static launch(element: HTMLCanvasElement | null) {
+    const context = element?.getContext("2d");
+
+    return context ? new RainbowRush(context) : null;
   }
 
   constructor(context: CanvasRenderingContext2D) {
@@ -601,7 +607,7 @@ export class RainbowRush {
     if (this.#screenState !== "playing") return;
 
     this.#elapsed += delta;
-    const playerPath: MotionPoint[] = [{ ...this.#player, time: 0 }];
+    const playerPath: MotionPoint[] = [{ ...this.#player, t: 0 }];
     if (this.#tutorialStep) {
       this.#updatePlayer(delta, playerPath);
       if (this.#playerOverTutorialSkip()) {
@@ -645,8 +651,8 @@ export class RainbowRush {
       return movingCirclesHit(path[0], path[0], playerRadius, targetStart, targetEnd, targetRadius);
     }
     for (let index = 0; index < path.length - 1; index += 1) {
-      const startProgress = path[index].time;
-      const endProgress = path[index + 1].time;
+      const startProgress = path[index].t;
+      const endProgress = path[index + 1].t;
       const targetSegmentStart = {
         x: targetStart.x + (targetEnd.x - targetStart.x) * startProgress,
         y: targetStart.y + (targetEnd.y - targetStart.y) * startProgress,
@@ -745,7 +751,7 @@ export class RainbowRush {
         24,
         RainbowRush.#HEIGHT - 24,
       );
-      path.push({ ...this.#player, time: 1 });
+      path.push({ ...this.#player, t: 1 });
       this.#brakeTimer -= delta;
       if (this.#brakeTimer <= 0) {
         this.#brakeTimer = 0;
@@ -755,7 +761,7 @@ export class RainbowRush {
       const follow = Math.min(1, delta * 9);
       this.#player.x += (this.#pointer.x - this.#player.x) * follow;
       this.#player.y += (this.#pointer.y - this.#player.y) * follow;
-      path.push({ ...this.#player, time: 1 });
+      path.push({ ...this.#player, t: 1 });
     } else if (this.#playerState === "rush") {
       let travel = this.#rushSpeed * delta;
       let motionTime = 0;
@@ -780,7 +786,7 @@ export class RainbowRush {
           travel = 0;
         }
         motionTime += moved / this.#rushSpeed;
-        path.push({ ...this.#player, time: clamp(motionTime / delta, 0, 1) });
+        path.push({ ...this.#player, t: clamp(motionTime / delta, 0, 1) });
         this.#attackAlongSegment(start, this.#player);
         this.#spawnTrailParticle();
       }
@@ -797,7 +803,7 @@ export class RainbowRush {
         this.#rushVelocity = { x: 0, y: 0 };
         this.#bufferTimer = 0.5;
       }
-      if (path[path.length - 1].time < 1) path.push({ ...this.#player, time: 1 });
+      if (path[path.length - 1].t < 1) path.push({ ...this.#player, t: 1 });
     }
 
     if (this.#playerState === "buffer") {
@@ -1034,9 +1040,9 @@ export class RainbowRush {
     this.#scorePopups.push({
       x: shot.x,
       y: shot.y,
-      color: this.#weaknessColor(shot.weakness),
+      popupColor: this.#weaknessColor(shot.weakness),
       life: 0.75,
-      text: "+20",
+      popupText: "+20",
     });
     for (let index = 0; index < 7; index += 1) {
       this.#particles.push({
@@ -1066,9 +1072,9 @@ export class RainbowRush {
       this.#scorePopups.push({
         x: enemy.x,
         y: enemy.y,
-        color: this.#weaknessColor(enemy.weakness),
+        popupColor: this.#weaknessColor(enemy.weakness),
         life: 1,
-        text: `+${reward}${this.#combo > 1 ? `  x${this.#combo}` : ""}`,
+        popupText: `+${reward}${this.#combo > 1 ? `  x${this.#combo}` : ""}`,
       });
     }
     this.#shake = 7;
@@ -1360,8 +1366,8 @@ export class RainbowRush {
     this.#ctx.font = "900 16px system-ui";
     for (const popup of this.#scorePopups) {
       this.#ctx.globalAlpha = clamp(popup.life * 2, 0, 1);
-      this.#ctx.fillStyle = popup.color;
-      this.#ctx.fillText(popup.text, popup.x, popup.y);
+      this.#ctx.fillStyle = popup.popupColor;
+      this.#ctx.fillText(popup.popupText, popup.x, popup.y);
     }
     this.#ctx.restore();
   }

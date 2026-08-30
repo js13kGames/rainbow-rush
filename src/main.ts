@@ -1,14 +1,12 @@
 import { RainbowRush } from "./rainbow-rush.ts";
+import type { WavedashSDK } from "@wvdsh/sdk-js";
 
 const main = () => {
-  const context = document.querySelector<HTMLCanvasElement>("#game")?.getContext("2d");
+  RainbowRush.launch(document.querySelector<HTMLCanvasElement>("#game"));
 
-  if (!context) {
-    alert("unsupported");
-    return;
-  }
-
-  new RainbowRush(context);
+  (window.Wavedash as WavedashSDK | undefined)?.init({
+    debug: false,
+  });
 };
 
 main();
